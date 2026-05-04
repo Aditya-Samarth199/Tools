@@ -1,11 +1,71 @@
 #!/usr/bin/env python3
 import subprocess
-import sys 
+import sys
 import os
+import getpass
+import ctypes
+import stat
+import pwd
+import pexpect
 from datetime import datetime
+from nacl.secret import SecretBox
+from nacl.utils import random as nacl_random
 
 LOG_FILE = "/var/log/sys_update.log"
 
+# ──────────────────────────────────────────────
+# Memory locking — prevents swap to disk
+# ──────────────────────────────────────────────
+def mlock(data: bytearray):
+    libc = ctypes.CDLL("libc.so.6", use_errno=True)
+    addr = (ctypes.c_char * len(data)).from_buffer(data)
+    if libc.mlock(addr, len(data)) != 0:
+        print("[WARN] mlock failed — memory may be swappable")
+
+def munlock(data: bytearray):
+    libc = ctypes.CDLL("libc.so.6", use_errno=True)
+    addr = (ctypes.c_char * len(data)).from_buffer(data)
+    libc.munlock(addr, len(data))
+
+def secure_wipe(data: bytearray):
+    munlock(data)
+    for i in range(len(data)):
+        data[i] = 0
+
+# ──────────────────────────────────────────────
+# Encrypted password vault (lives in RAM only)
+# ──────────────────────────────────────────────
+class SecurePassword:
+    def __init__(self, plaintext: str):
+        self._key = bytearray(nacl_random(SecretBox.KEY_SIZE))
+        mlock(self._key)
+
+        plain_bytes = bytearray(plaintext.encode())
+        mlock(plain_bytes)
+
+        box = SecretBox(bytes(self._key))
+        encrypted = box.encrypt(bytes(plain_bytes))
+
+        self._blob = bytearray(encrypted)
+        mlock(self._blob)
+
+        secure_wipe(plain_bytes)
+        del plain_bytes, plaintext
+
+    def decrypt(self) -> bytearray:
+        box = SecretBox(bytes(self._key))
+        plain = bytearray(box.decrypt(bytes(self._blob)))
+        mlock(plain)
+        return plain
+
+    def wipe(self):
+        secure_wipe(self._key)
+        secure_wipe(self._blob)
+        del self._key, self._blob
+
+# ──────────────────────────────────────────────
+# Logging
+# ──────────────────────────────────────────────
 def log(message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     entry = f"[{timestamp}] {message}\n"
@@ -13,32 +73,100 @@ def log(message):
         f.write(entry)
     print(entry, end="")
 
+# ──────────────────────────────────────────────
+# Sudo check
+# ──────────────────────────────────────────────
 def check_sudo():
     if os.geteuid() != 0:
-        print("Please run with sudo \n")
-        exit()
-    else:
-        log("sudo is on")
+        print("Please run with sudo\n")
+        sys.exit(1)
+    log("Running as root: OK")
 
-def update():
+# ──────────────────────────────────────────────
+# pexpect — auto-respond to password prompts
+# ──────────────────────────────────────────────
+def run_yay_with_secure_password(real_user: str, secure_pwd: SecurePassword):
+    plain: bytearray = None
+    password_str: str = None
+
+    try:
+        plain = secure_pwd.decrypt()
+        password_str = plain.decode()
+
+        # Wipe plain immediately after decode
+        secure_wipe(plain)
+        plain = None
+
+        log("yay is running")
+
+        child = pexpect.spawn(
+            f"su - {real_user} -c "
+            f"'yay -Syu --noconfirm --answerdiff=None --answerclean=None --sudoloop'",
+            encoding="utf-8",
+            timeout=600
+        )
+
+        # Stream yay output live to terminal
+        child.logfile_read = sys.stdout
+
+        while True:
+            index = child.expect([
+                r"\[sudo\] password for .+:",  # sudo prompt
+                r"Password:",                   # fallback prompt
+                pexpect.EOF,
+                pexpect.TIMEOUT
+            ], timeout=600)
+
+            if index in (0, 1):
+                child.sendline(password_str)   # auto-paste password
+            elif index == 2:
+                break                           # done
+            elif index == 3:
+                log("[ERROR] Timeout waiting for yay")
+                child.close(force=True)
+                sys.exit(1)
+
+        child.close()
+
+        if child.exitstatus != 0:
+            log(f"[ERROR] yay exited with code {child.exitstatus}")
+            sys.exit(1)
+
+        log("yay done")
+
+    except Exception as e:
+        log(f"[ERROR] yay failed: {e}")
+        sys.exit(1)
+
+    finally:
+        # Wipe password from memory
+        if plain:
+            secure_wipe(plain)
+        if password_str:
+            del password_str
+
+# ──────────────────────────────────────────────
+# Main update flow
+# ──────────────────────────────────────────────
+def update(secure_pwd: SecurePassword):
     real_user = os.environ.get("SUDO_USER")
-
     if not real_user:
-        log("[ERROR] Could not detect the original user. Run with sudo.")
+        log("[ERROR] Could not detect original user.")
         sys.exit(1)
 
     try:
         log("pacman is running")
-        subprocess.run("pacman -Syu", shell=True, check=True)
+        subprocess.run("pacman -Syu --noconfirm", shell=True, check=True)
         log("pacman done")
 
         log("flatpak is running")
-        subprocess.run(f"su - {real_user} -c 'flatpak update -y'", shell=True, check=True)
+        subprocess.run(
+            f"su - {real_user} -c 'flatpak update -y'",
+            shell=True, check=True
+        )
         log("flatpak done")
 
-        log("yay is running")
-        subprocess.run(f"su - {real_user} -c 'yay -Syu --noconfirm --answerdiff=None --answerclean=None --sudoloop'", shell=True, check=True)
-        log("yay done")
+        run_yay_with_secure_password(real_user, secure_pwd)
 
         log("All updates completed successfully")
 
@@ -46,6 +174,18 @@ def update():
         log(f"[ERROR] Command failed: {e}")
         sys.exit(1)
 
+    finally:
+        secure_pwd.wipe()
+        log("Password vault wiped from memory")
+
+# ──────────────────────────────────────────────
+# Entry point
+# ──────────────────────────────────────────────
 check_sudo()
-update()
+
+raw_password = getpass.getpass(prompt="[sudo] password (encrypted in RAM): ")
+secure_pwd = SecurePassword(raw_password)
+del raw_password
+
+update(secure_pwd)
 
