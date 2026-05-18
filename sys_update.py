@@ -85,7 +85,7 @@ def check_sudo():
 # ──────────────────────────────────────────────
 # pexpect — auto-respond to password prompts
 # ──────────────────────────────────────────────
-def run_yay_with_secure_password(real_user: str, secure_pwd: SecurePassword):
+def run_paru_with_secure_password(real_user: str, secure_pwd: SecurePassword):
     plain: bytearray = None
     password_str: str = None
 
@@ -97,16 +97,16 @@ def run_yay_with_secure_password(real_user: str, secure_pwd: SecurePassword):
         secure_wipe(plain)
         plain = None
 
-        log("yay is running")
+        log("paru is running")
 
         child = pexpect.spawn(
             f"su - {real_user} -c "
-            f"'yay -Syu --noconfirm --answerdiff=None --answerclean=None --sudoloop'",
+            f"'paru -Sua --noconfirm --answerdiff=None --answerclean=None --sudoloop'",
             encoding="utf-8",
             timeout=600
         )
 
-        # Stream yay output live to terminal
+        # Stream paru output live to terminal
         child.logfile_read = sys.stdout
 
         while True:
@@ -122,20 +122,20 @@ def run_yay_with_secure_password(real_user: str, secure_pwd: SecurePassword):
             elif index == 2:
                 break                           # done
             elif index == 3:
-                log("[ERROR] Timeout waiting for yay")
+                log("[ERROR] Timeout waiting for paru")
                 child.close(force=True)
                 sys.exit(1)
 
         child.close()
 
         if child.exitstatus != 0:
-            log(f"[ERROR] yay exited with code {child.exitstatus}")
+            log(f"[ERROR] paru exited with code {child.exitstatus}")
             sys.exit(1)
 
-        log("yay done")
+        log("paru done")
 
     except Exception as e:
-        log(f"[ERROR] yay failed: {e}")
+        log(f"[ERROR] paru failed: {e}")
         sys.exit(1)
 
     finally:
