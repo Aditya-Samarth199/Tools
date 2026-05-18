@@ -101,7 +101,7 @@ def run_paru_with_secure_password(real_user: str, secure_pwd: SecurePassword):
 
         child = pexpect.spawn(
             f"su - {real_user} -c "
-            f"'paru -Sua --noconfirm --answerdiff=None --answerclean=None --sudoloop'",
+            f"'paru -Sua --noconfirm --sudoloop'",
             encoding="utf-8",
             timeout=600
         )
@@ -166,7 +166,7 @@ def update(secure_pwd: SecurePassword):
         )
         log("flatpak done")
 
-        run_yay_with_secure_password(real_user, secure_pwd)
+        run_paru_with_secure_password(real_user, secure_pwd)
 
         log("All updates completed successfully")
 
