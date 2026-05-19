@@ -100,8 +100,7 @@ def run_paru_with_secure_password(real_user: str, secure_pwd: SecurePassword):
         log("paru is running")
 
         child = pexpect.spawn(
-            f"su - {real_user} -c "
-            f"'SUDO_ASKPASS=/bin/false paru -Sua --noconfirm --sudoloop'",
+            "sudo", ["-u", real_user, "-i", "--", "paru", "-Sua", "--noconfirm", "--sudoloop"],
             encoding="utf-8",
             timeout=600
         )
