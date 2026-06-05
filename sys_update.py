@@ -86,6 +86,12 @@ def check_sudo():
 # pexpect — auto-respond to password prompts
 # ──────────────────────────────────────────────
 def run_paru_with_secure_password(real_user: str, secure_pwd: SecurePassword):
+
+    log("freshclam is running") # updating calm AV signnature list
+    subprocess.run("freshclam", shell=True, check=True)
+    log("freshclam done")
+    log("All updates completed successfully")
+
     plain: bytearray = None
     password_str: str = None
 
