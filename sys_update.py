@@ -90,7 +90,10 @@ def run_paru_with_secure_password(real_user: str, secure_pwd: SecurePassword):
     log("freshclam is running") # updating calm AV viruse signature list
     subprocess.run("freshclam", shell=True, check=True)
     log("freshclam done")
-    log("All updates completed successfully")
+
+    log("uv is running")
+    subprocess.run("uv tool upgrade --all", shell=True, check=True)
+    log("uv done")
 
     plain: bytearray = None
     password_str: str = None
