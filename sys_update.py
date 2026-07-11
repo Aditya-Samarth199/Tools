@@ -154,6 +154,24 @@ def run_paru_with_secure_password(real_user: str, secure_pwd: SecurePassword):
             del password_str
 
 # ──────────────────────────────────────────────
+# remove orphan packages
+# ──────────────────────────────────────────────
+def remove_orphans():
+    log("checking for orphan packages")
+    result = subprocess.run(
+        "pacman -Qtdq", shell=True, capture_output=True, text=True
+    )
+    orphans = result.stdout.strip()
+    if not orphans:
+        log("no orphan packages found")
+        return
+    log(f"removing orphans: {orphans.replace(chr(10), ', ')}")
+    subprocess.run(
+        f"pacman -Rns --noconfirm {orphans}", shell=True, check=True
+    )
+    log("orphan removal done")
+
+# ──────────────────────────────────────────────
 # Main update flow
 # ──────────────────────────────────────────────
 def update(secure_pwd: SecurePassword):
@@ -163,6 +181,10 @@ def update(secure_pwd: SecurePassword):
         sys.exit(1)
 
     try:
+        log("removing pacman old cache")
+        subprocess.run("find /var/cache/pacman/pkg -name 'download-*' -delete", shell=True)
+        log("done removing pacman old cache")
+
         log("pacman is running")
         subprocess.run("pacman -Syu --noconfirm", shell=True, check=True)
         log("pacman done")
@@ -175,7 +197,7 @@ def update(secure_pwd: SecurePassword):
         log("flatpak done")
 
         run_paru_with_secure_password(real_user, secure_pwd)
-
+        remove_orphans()
         log("All updates completed successfully")
 
     except subprocess.CalledProcessError as e:
