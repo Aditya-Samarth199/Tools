@@ -185,9 +185,13 @@ def update(secure_pwd: SecurePassword):
         subprocess.run("find /var/cache/pacman/pkg -name 'download-*' -delete", shell=True)
         log("done removing pacman old cache")
 
+        log("Check the pacman works or not when running paru")
+
+'''
         log("pacman is running")
         subprocess.run("pacman -Syu --noconfirm", shell=True, check=True)
         log("pacman done")
+'''
 
         log("flatpak is running")
         subprocess.run(
