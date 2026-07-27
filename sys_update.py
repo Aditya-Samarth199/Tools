@@ -92,7 +92,7 @@ def run_paru_with_secure_password(real_user: str, secure_pwd: SecurePassword):
     log("freshclam done")
 
     log("uv is running")
-    subprocess.run("uv tool upgrade --all", shell=True, check=True)
+    subprocess.run(f"su - {real_user} -c 'uv tool upgrade --all'", shell=True, check=True)
     log("uv done")
 
     plain: bytearray = None
@@ -165,9 +165,10 @@ def remove_orphans():
     if not orphans:
         log("no orphan packages found")
         return
-    log(f"removing orphans: {orphans.replace(chr(10), ', ')}")
+    orphans_list = orphans.split()
+    log(f"removing orphans: {', '.join(orphans_list)}")
     subprocess.run(
-        f"pacman -Rns --noconfirm {orphans}", shell=True, check=True
+        ["pacman", "-Rns", "--noconfirm", *orphans_list], check=True
     )
     log("orphan removal done")
 
@@ -187,11 +188,11 @@ def update(secure_pwd: SecurePassword):
 
         log("Check the pacman works or not when running paru")
 
-'''
+        '''
         log("pacman is running")
         subprocess.run("pacman -Syu --noconfirm", shell=True, check=True)
         log("pacman done")
-'''
+        '''
 
         log("flatpak is running")
         subprocess.run(
