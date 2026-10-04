@@ -1,0 +1,23 @@
+2026-10-04 10:42:47,480 | server_start   | base=/home/Psycho/Work/Programming/Python/projects/AI
+2026-10-04 10:45:08,048 | login_failed  | user=hi | ip=10.43.99.219
+2026-10-04 10:45:10,284 | login_failed  | user=hi | ip=10.43.99.219
+2026-10-04 10:45:12,021 | login_failed  | user=hi | ip=10.43.99.219
+2026-10-04 10:45:28,301 | register      | user=hi | ip=10.43.99.219
+2026-10-04 10:45:28,659 | error         | user=hi | ip=10.43.99.219 | models: LM Studio is not reachable at any default port. Is LM Studio running?
+2026-10-04 10:45:28,871 | register      | user=by | ip=10.43.99.154
+2026-10-04 10:45:28,919 | error         | user=by | ip=10.43.99.154 | models: Local API host port is not yet resolved.
+2026-10-04 10:46:07,749 | server_start   | base=/home/Psycho/Work/Programming/Python/projects/AI
+2026-10-04 10:46:33,231 | chat_new      | user=by | ip=10.43.99.154 | chat=e56c604e3c304e51b83b99005c06b9af
+2026-10-04 10:46:33,258 | chat_new      | user=hi | ip=10.43.99.219 | chat=2a3dab3ea8014e4d9f469651edc69b3b
+2026-10-04 10:46:33,270 | message       | user=by | ip=10.43.99.154 | chat=e56c604e3c304e51b83b99005c06b9af model='google/gemma-3-1b' chars=2
+2026-10-04 10:46:33,312 | message       | user=hi | ip=10.43.99.219 | chat=2a3dab3ea8014e4d9f469651edc69b3b model='google/gemma-3-1b' chars=2
+2026-10-04 10:46:47,973 | message       | user=hi | ip=10.43.99.219 | chat=2a3dab3ea8014e4d9f469651edc69b3b model='google/gemma-3-1b' chars=2
+2026-10-04 10:47:24,010 | message       | user=by | ip=10.43.99.154 | chat=e56c604e3c304e51b83b99005c06b9af model='google/gemma-3-1b' chars=2
+2026-10-04 10:48:12,520 | message       | user=by | ip=10.43.99.154 | chat=e56c604e3c304e51b83b99005c06b9af model='google/gemma-3-1b' chars=3
+2026-10-04 10:49:22,411 | message       | user=hi | ip=10.43.99.219 | chat=2a3dab3ea8014e4d9f469651edc69b3b model='google/gemma-3-1b' chars=1
+2026-10-04 10:50:26,643 | message       | user=hi | ip=10.43.99.219 | chat=2a3dab3ea8014e4d9f469651edc69b3b model='google/gemma-3-1b' chars=82
+2026-10-04 10:50:38,308 | message       | user=by | ip=10.43.99.154 | chat=e56c604e3c304e51b83b99005c06b9af model='google/gemma-3-1b' chars=2
+2026-10-04 10:51:16,006 | message       | user=hi | ip=10.43.99.219 | chat=2a3dab3ea8014e4d9f469651edc69b3b model='google/gemma-3-1b' chars=61
+2026-10-04 10:51:39,921 | message       | user=hi | ip=10.43.99.219 | chat=2a3dab3ea8014e4d9f469651edc69b3b model='google/gemma-3-1b' chars=22
+2026-10-04 10:52:03,594 | message       | user=hi | ip=10.43.99.219 | chat=2a3dab3ea8014e4d9f469651edc69b3b model='google/gemma-3-1b' chars=27
+2026-10-04 10:53:53,932 | login         | user=hi | ip=10.43.99.82

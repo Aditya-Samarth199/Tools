@@ -1,0 +1,41 @@
+{
+  "id": "e56c604e3c304e51b83b99005c06b9af",
+  "title": "Hi",
+  "created": 1791090993.2306406,
+  "updated": 1791091240.1571198,
+  "model": "google/gemma-3-1b",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "content": "Hello! How can I help you today? 😊"
+    },
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "content": "Great to hear! What's on your mind? Do you need anything – like information, brainstorming, or just someone to chat with?"
+    },
+    {
+      "role": "user",
+      "content": "Bye"
+    },
+    {
+      "role": "assistant",
+      "content": "Okay! Bye for now! Have a wonderful day! 😊"
+    },
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "content": "Hello there! How can I help you today? ☀️"
+    }
+  ]
+}
